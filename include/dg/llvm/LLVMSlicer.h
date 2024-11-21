@@ -139,9 +139,14 @@ class LLVMSlicer : public Slicer<LLVMNode> {
             }
         }
         for (auto *F : to_erase) {
-            F->replaceAllUsesWith(llvm::UndefValue::get(F->getType()));
             F->deleteBody();
-            F->eraseFromParent();
+
+            if (!F->hasAddressTaken()) {
+                // remove the function only if it does not have its address taken
+                // to maintain valid pointers to it
+                F->replaceAllUsesWith(llvm::UndefValue::get(F->getType()));
+                F->eraseFromParent();
+            }
         }
 
         return sl_id;
