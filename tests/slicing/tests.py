@@ -44,6 +44,7 @@ tests = {
                                   compilerparams=['-DASSERT_NO_ABORT'],
                                   expectedoutput='interprocedural8.output'),
     'interprocedural9'     : Test('interprocedural9.c'),
+    'interproc-loop-noret' : Test('interproc-loop-noret.c'),
     'funcptr1'             : Test('funcptr1.c'),
     'funcptr2'             : Test('funcptr2.c'),
     'funcptr3'             : Test('funcptr3.c'),
