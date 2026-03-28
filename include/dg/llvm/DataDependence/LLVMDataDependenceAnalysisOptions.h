@@ -47,6 +47,9 @@ struct LLVMDataDependenceAnalysisOptions : public LLVMAnalysisOptions,
         functionModelAddDef("strncpy", {0, Offset(0), 2});
         functionModelAddUse("strncpy", {1, Offset(0), 2});
 
+        functionModelAddDef("fread",  {0, Offset(0), Offset::getUnknown()});
+        functionModelAddDef("fgets",  {0, Offset(0), 1});
+
         ///
         // Mutexes
         ///
@@ -60,6 +63,9 @@ struct LLVMDataDependenceAnalysisOptions : public LLVMAnalysisOptions,
         ///
         functionModelDefinesAllArgs("__isoc99_fscanf");
         functionModelDefinesAllArgs("fscanf");
+        functionModelDefinesAllArgs("sscanf");
+        functionModelDefinesAllArgs("__isoc99_sscanf");
+        functionModelDefinesAllArgs("scanf");
     };
 };
 
