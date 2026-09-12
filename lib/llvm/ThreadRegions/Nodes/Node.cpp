@@ -92,9 +92,7 @@ std::set<Node *> Node::directPredecessors() const {
     return res;
 }
 
-std::set<Node *> Node::directSuccessors() const {
-    return successors();
-}
+std::set<Node *> Node::directSuccessors() const { return successors(); }
 
 bool Node::isArtificial() const { return llvmInstruction_ == nullptr; }
 
@@ -130,11 +128,13 @@ string Node::label() const {
 void Node::printOutcomingEdges(ostream &ostream, bool printOnlyDirect) const {
     if (!printOnlyDirect) {
         for (const auto &successor : successors_) {
-            ostream << this->dotName() << " -> " << successor->dotName() << "\n";
+            ostream << this->dotName() << " -> " << successor->dotName()
+                    << "\n";
         }
     }
 
     for (auto *directSuccessor : directSuccessors()) {
-        ostream << this->dotName() << " -> " << directSuccessor->dotName() << " [color=\"red\"]\n";
+        ostream << this->dotName() << " -> " << directSuccessor->dotName()
+                << " [color=\"red\"]\n";
     }
 }

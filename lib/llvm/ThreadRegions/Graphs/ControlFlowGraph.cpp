@@ -59,7 +59,7 @@ void ControlFlowGraph::printWithRegions(std::ostream &ostream,
     ostream << "compound = true\n";
 
     threadRegionsBuilder->printNodes(ostream);
-    graphBuilder->printEdges(ostream, mhp!=nullptr);
+    graphBuilder->printEdges(ostream, mhp != nullptr);
     threadRegionsBuilder->printEdges(ostream);
 
     if (mhp != nullptr) {

@@ -52,7 +52,8 @@ std::set<JoinNode *> ForkNode::correspondingJoins() {
     return correspondingJoins_;
 }
 
-void ForkNode::printOutcomingEdges(ostream &ostream, bool printOnlyDirect) const {
+void ForkNode::printOutcomingEdges(ostream &ostream,
+                                   bool printOnlyDirect) const {
     Node::printOutcomingEdges(ostream, printOnlyDirect);
     if (!printOnlyDirect) {
         for (const auto &forkSuccessor : forkSuccessors_) {
