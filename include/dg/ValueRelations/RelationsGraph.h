@@ -265,8 +265,8 @@ class RelationsGraph {
         RelationsMap result;
         std::set_intersection(ltGE.begin(), ltGE.end(), rtLE.begin(),
                               rtLE.end(), std::inserter(result, result.begin()),
-                              [](RelationsMap::value_type &ltPair,
-                                 RelationsMap::value_type &rtPair) {
+                              [](const RelationsMap::value_type &ltPair,
+                                 const RelationsMap::value_type &rtPair) {
                                   return ltPair.first < rtPair.first;
                               });
 
