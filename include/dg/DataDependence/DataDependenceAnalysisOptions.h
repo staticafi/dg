@@ -84,7 +84,7 @@ struct FunctionModel {
     }
 
     bool handles(unsigned i) const {
-	return defines(i) || uses(i) || _definesAllArgs;
+        return defines(i) || uses(i) || _definesAllArgs;
     }
 
   private:

@@ -90,7 +90,14 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/sanitizer_test.c"
            "int main(int argc, char* argv[]) {}")
 execute_process(COMMAND "${CLANG}" "-fsanitize=address,undefined"
                         "${CMAKE_CURRENT_BINARY_DIR}/sanitizer_test.c"
+                        "-o" "${CMAKE_CURRENT_BINARY_DIR}/sanitizer_test"
                 RESULT_VARIABLE EXIT_CODE)
+
+# Compiling is not enough, the binary has to run (llvm/llvm-project#55785).
+if(EXIT_CODE EQUAL 0)
+    execute_process(COMMAND "${CMAKE_CURRENT_BINARY_DIR}/sanitizer_test"
+                    RESULT_VARIABLE EXIT_CODE)
+endif()
 
 if(EXIT_CODE EQUAL 0)
     set(CLANG_HAS_SANITIZERS ON CACHE BOOL

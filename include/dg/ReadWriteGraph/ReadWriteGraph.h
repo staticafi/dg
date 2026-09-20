@@ -77,14 +77,14 @@ class ReadWriteGraph {
 
     RWNode &create(RWNodeType t) {
         switch (t) {
-            case RWNodeType::CALL:
-                _nodes.emplace_back(new RWNodeCall(++lastNodeID));
-                break;
-            case RWNodeType::FORK:
-                _nodes.emplace_back(new RWNodeFork(++lastNodeID));
-                break;
-            default:
-                _nodes.emplace_back(new RWNode(++lastNodeID, t));
+        case RWNodeType::CALL:
+            _nodes.emplace_back(new RWNodeCall(++lastNodeID));
+            break;
+        case RWNodeType::FORK:
+            _nodes.emplace_back(new RWNodeFork(++lastNodeID));
+            break;
+        default:
+            _nodes.emplace_back(new RWNode(++lastNodeID, t));
         }
 
         return *_nodes.back().get();

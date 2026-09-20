@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12]
+        os: [macos-15]
         build: [Debug, RelWithDebInfo]
 
     runs-on: ${{matrix.os}}
@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout DG
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: brew install ninja ccache llvm@14
@@ -32,12 +32,12 @@ jobs:
           echo "CCACHE_COMPRESSLEVEL=6" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=400M" >> $GITHUB_ENV
 
-          echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
+          echo "$(brew --prefix ccache)/libexec" >> $GITHUB_PATH
 
-          echo "::set-output name=timestamp::$(date -u +%Y-%m-%dT%H:%M:%S%z)"
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%S%z)" >> $GITHUB_OUTPUT
 
       - name: Set-up ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .ccache
           key: ${{matrix.os}}-${{matrix.build}}-${{steps.env.outputs.timestamp}}

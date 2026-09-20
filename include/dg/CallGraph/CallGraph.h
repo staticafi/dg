@@ -35,7 +35,9 @@ class GenericCallGraph {
         bool isCalledBy(FuncNode *x) const { return _contains(x, _callers); }
 
         bool forks(const FuncNode *x) const { return _contains(x, _forks); }
-        bool isForkedBy(const FuncNode *x) const { return _contains(x, _forkers); }
+        bool isForkedBy(const FuncNode *x) const {
+            return _contains(x, _forkers);
+        }
 
         unsigned getID() const { return _id; }
         unsigned getSCCId() const { return _scc_id; }
