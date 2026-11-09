@@ -35,6 +35,8 @@ struct LLVMDataDependenceAnalysisOptions : public LLVMAnalysisOptions,
         functionModelAddUse("memcmp", {0, Offset(0), 2});
         functionModelAddUse("memcmp", {1, Offset(0), 2});
 
+        functionModelAddDef("__VERIFIER_nondet_memory", {0, Offset(0), 1});
+
         ///
         // String handling functions
         ///
