@@ -33,6 +33,16 @@ struct AnalysisOptions {
         return *this;
     }
 
+    // If true, allocation functions (malloc, calloc, realloc) may fail,
+    // i.e., the returned pointer may be NULL. If false (default), the result
+    // always points to the newly allocated memory.
+    bool allocationMayFail{false};
+
+    AnalysisOptions &setAllocationMayFail(bool b) {
+        allocationMayFail = b;
+        return *this;
+    }
+
     std::map<const std::string, AllocationFunction> allocationFunctions = {
             {"malloc", AllocationFunction::MALLOC},
             {"calloc", AllocationFunction::CALLOC},

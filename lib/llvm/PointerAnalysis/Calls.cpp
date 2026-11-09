@@ -278,12 +278,14 @@ PSNode *LLVMPointerGraphBuilder::createDynamicAlloc(const llvm::CallInst *CInst,
 
     switch (type) {
     case AllocationFunction::MALLOC:
+    case AllocationFunction::MALLOC0:
         node->setIsHeap();
         /* fallthrough */
     case AllocationFunction::ALLOCA:
         op = CInst->getOperand(0);
         break;
     case AllocationFunction::CALLOC:
+    case AllocationFunction::CALLOC0:
         node->setIsHeap();
         node->setZeroInitialized();
         op = CInst->getOperand(1);
@@ -297,7 +299,8 @@ PSNode *LLVMPointerGraphBuilder::createDynamicAlloc(const llvm::CallInst *CInst,
 
     // infer allocated size
     size = llvmutils::getConstantSizeValue(op);
-    if (size != 0 && type == AllocationFunction::CALLOC) {
+    if (size != 0 && (type == AllocationFunction::CALLOC ||
+                      type == AllocationFunction::CALLOC0)) {
         // if this is call to calloc, the size is given
         // in the first argument too
         size2 = llvmutils::getConstantSizeValue(CInst->getOperand(0));
@@ -336,6 +339,13 @@ LLVMPointerGraphBuilder::createRealloc(const llvm::CallInst *CInst) {
     ret.append(ptr);
     ret.setRepresentant(ptr);
 
+    // realloc may fail and return NULL
+    if (_options.allocationMayFail) {
+        PSNode *res = PS.create<PSNodeType::PHI>(ptr, NULLPTR);
+        ret.append(res);
+        ret.setRepresentant(res);
+    }
+
     return ret;
 }
 
@@ -349,7 +359,20 @@ LLVMPointerGraphBuilder::createDynamicMemAlloc(const llvm::CallInst *CInst,
     if (type == AllocationFunction::REALLOC) {
         seq = createRealloc(CInst);
     } else {
-        seq = {createDynamicAlloc(CInst, type)};
+        PSNode *alloc = createDynamicAlloc(CInst, type);
+        seq = {alloc};
+        // the allocation may fail and return NULL: the result of the call
+        // is then either the new memory or NULL
+        if (_options.allocationMayFail &&
+            (type == AllocationFunction::MALLOC ||
+             type == AllocationFunction::CALLOC)) {
+            // the representant of the sequence gets the user data
+            // of the call, so keep them also in the allocation node
+            alloc->setUserData(const_cast<llvm::CallInst *>(CInst));
+            PSNode *res = PS.create<PSNodeType::PHI>(alloc, NULLPTR);
+            seq.append(res);
+            seq.setRepresentant(res);
+        }
     }
     return seq;
 }
