@@ -1,4 +1,6 @@
+#include <llvm/Analysis/LoopInfo.h>
 #include <llvm/IR/CFG.h>
+#include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
@@ -85,10 +87,27 @@ void LLVMInterprocCD::computeFuncInfo(const llvm::Function *fun,
         }
     }
 
-    // llvm::errs() << "Noret points of " << fun->getName() << "\n";
-    // for (auto *nr : info.noret) {
-    //    llvm::errs() << "  -> " << *nr << "\n";
-    //}
+    // Detect functions that may not return due to loops.
+    // Sound criterion: a function *may not return* whenever it contains any
+    // natural loop — LLVM's LoopInfo enumerates all of them.  Every loop
+    // header's terminator is the branching point that may prevent return.
+    if (info.noret.empty()) {
+        auto *F = const_cast<Function *>(fun);
+        DominatorTree DT(*F);
+        LoopInfo LI(DT);
+        for (Loop *L : LI.getLoopsInPreorder()) {
+            DBG(cda, "Function " << fun->getName().str()
+                                 << ": loop header '"
+                                 << L->getHeader()->getName().str()
+                                 << "'; marking as noret");
+            info.noret.insert(L->getHeader()->getTerminator());
+        }
+    }
+
+    llvm::errs() << "Noret points of " << fun->getName() << "\n";
+    for (auto *nr : info.noret) {
+        llvm::errs() << "  -> " << *nr << "\n";
+    }
 
     DBG_SECTION_END(cda, "Done computing no-return points for function "
                                  << fun->getName().str());
