@@ -165,7 +165,20 @@ check_cxx_source_compiles(
     HAS_FUZZER)
 set(CMAKE_REQUIRED_FLAGS "")
 
-option(ENABLE_FUZZING "Enable fuzzing tests" ${HAS_FUZZER})
+# clang 11 accepts these flags but the binary aborts at startup against
+# glibc 2.35, so this has to run, not just compile (llvm/llvm-project#55785).
+include(CheckCXXSourceRuns)
+set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
+check_cxx_source_runs("int main() { return 0; }" SANITIZER_RUNTIME_WORKS)
+set(CMAKE_REQUIRED_FLAGS "")
+
+if(HAS_FUZZER AND SANITIZER_RUNTIME_WORKS)
+    set(FUZZING_DEFAULT ON)
+else()
+    set(FUZZING_DEFAULT OFF)
+endif()
+
+option(ENABLE_FUZZING "Enable fuzzing tests" ${FUZZING_DEFAULT})
 if(NOT ENABLE_FUZZING)
     message(STATUS "Will NOT build fuzzing tests (requires Clang 6 or newer)")
 endif()
@@ -199,11 +212,7 @@ if (NO_EXCEPTIONS)
 endif()
 
 if (USE_SANITIZERS)
-	set(CMAKE_REQUIRED_FLAGS "-fsanitize=undefined,address") # for linker
-	check_cxx_compiler_flag("-fsanitize=undefined,address" sanitizers_work)
-	set(CMAKE_REQUIRED_FLAGS "")
-
-	if (sanitizers_work)
+	if (SANITIZER_RUNTIME_WORKS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined,address")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fno-omit-frame-pointer")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=all")

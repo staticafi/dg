@@ -9,32 +9,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # LLVM 3.9-10 are dropped: they only ever shipped in the
+          # ubuntu-18.04/20.04 runner images, which GitHub has retired, and
+          # apt.llvm.org no longer carries them either. The range below is
+          # what Symbiotic builds DG against.
+
           # Linux with GCC
-          - {os: ubuntu-18.04, llvm: '3.9', compiler: gcc}
-          - {os: ubuntu-18.04, llvm: '4.0', compiler: gcc}
-          - {os: ubuntu-18.04, llvm: '5.0', compiler: gcc}
-          - {os: ubuntu-18.04, llvm: '6.0', compiler: gcc}
-          - {os: ubuntu-18.04, llvm: 7, compiler: gcc}
-          - {os: ubuntu-18.04, llvm: 8, compiler: gcc}
-          - {os: ubuntu-18.04, llvm: 9, compiler: gcc}
-          - {os: ubuntu-20.04, llvm: 10, compiler: gcc}
-          - {os: ubuntu-20.04, llvm: 11, compiler: gcc}
-          - {os: ubuntu-20.04, llvm: 12, compiler: gcc}
+          - {os: ubuntu-22.04, llvm: 11, compiler: gcc}
+          - {os: ubuntu-22.04, llvm: 12, compiler: gcc}
           - {os: ubuntu-22.04, llvm: 13, compiler: gcc}
           - {os: ubuntu-22.04, llvm: 14, compiler: gcc}
           - {os: ubuntu-22.04, llvm: 14, compiler: gcc, type: Debug}
 
           # Linux with Clang
-          - {os: ubuntu-18.04, llvm: '3.9', compiler: clang}
-          - {os: ubuntu-18.04, llvm: '4.0', compiler: clang}
-          - {os: ubuntu-18.04, llvm: '5.0', compiler: clang}
-          - {os: ubuntu-18.04, llvm: '6.0', compiler: clang}
-          - {os: ubuntu-18.04, llvm: 7, compiler: clang}
-          - {os: ubuntu-18.04, llvm: 8, compiler: clang}
-          - {os: ubuntu-18.04, llvm: 9, compiler: clang}
-          - {os: ubuntu-20.04, llvm: 10, compiler: clang}
-          - {os: ubuntu-20.04, llvm: 11, compiler: clang}
-          - {os: ubuntu-20.04, llvm: 12, compiler: clang}
+          - {os: ubuntu-22.04, llvm: 11, compiler: clang}
+          - {os: ubuntu-22.04, llvm: 12, compiler: clang}
           - {os: ubuntu-22.04, llvm: 13, compiler: clang}
           - {os: ubuntu-22.04, llvm: 14, compiler: clang}
           - {os: ubuntu-22.04, llvm: 14, compiler: clang, type: Debug}
@@ -46,13 +35,7 @@ jobs:
 
     steps:
       - name: Checkout DG
-        uses: actions/checkout@v3
-
-      - name: '[LLVM ${{matrix.llvm}}] Add repositories'
-        if: matrix.llvm >= 15
-        run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb https://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{matrix.llvm}} main"
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -83,7 +66,6 @@ jobs:
           sudo /usr/sbin/update-ccache-symlinks
           echo "/usr/lib/ccache" >> $GITHUB_PATH
 
-          # Bionic does not create symlinks to versioned clang
           sudo ln -sfr /usr/bin/ccache /usr/lib/ccache/clang-${{matrix.llvm}}
           sudo ln -sfr /usr/bin/ccache /usr/lib/ccache/clang++-${{matrix.llvm}}
 
@@ -93,10 +75,10 @@ jobs:
           echo "CCACHE_COMPRESSLEVEL=6" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=400M" >> $GITHUB_ENV
 
-          echo "::set-output name=timestamp::$(date -u -Iseconds)"
+          echo "timestamp=$(date -u -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Set up ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .ccache
           key: ${{matrix.os}}-${{matrix.llvm}}-${{matrix.compiler}}-${{matrix.type}}-${{steps.env.outputs.timestamp}}
@@ -110,7 +92,6 @@ jobs:
                 -DCMAKE_BUILD_TYPE:STRING="${{matrix.type}}" \
                 -DUSE_SANITIZERS:BOOL=ON \
                 -DLLVM_DIR:PATH="/usr/lib/llvm-${{matrix.llvm}}/lib/cmake/llvm"
-                # llvm-config-3.9 does not take --cmakedir yet!
 
       - name: '[Dynamic LLVM] Build'
         run: cmake --build _build

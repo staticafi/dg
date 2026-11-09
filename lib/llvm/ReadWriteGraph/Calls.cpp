@@ -298,23 +298,23 @@ RWNode *LLVMReadWriteGraphBuilder::funcFromModel(const FunctionModel *model,
             RWNode *target = getOperand(ptr.value);
             assert(target && "Don't have pointer target for call argument");
 
-	    Offset from, to;
-	    if (model->definesAllArgs()) {
-		node->addDef(target, Offset(0), Offset::getUnknown());
-	    } else {
-		if (const auto *defines = model->defines(i)) {
-		    std::tie(from, to) = getFromTo(CInst, defines);
-		    // this call may define this memory
-		    bool strong_updt = pts.second.size() == 1 &&
-			!ptr.offset.isUnknown() &&
-			!(ptr.offset + from).isUnknown() &&
-			!(ptr.offset + to).isUnknown() &&
-			!llvm::isa<llvm::CallInst>(ptr.value);
-		    // FIXME: what about vars in recursive functions?
-		    node->addDef(target, ptr.offset + from, ptr.offset + to,
-				 strong_updt);
-		}
-	    }
+            Offset from, to;
+            if (model->definesAllArgs()) {
+                node->addDef(target, Offset(0), Offset::getUnknown());
+            } else {
+                if (const auto *defines = model->defines(i)) {
+                    std::tie(from, to) = getFromTo(CInst, defines);
+                    // this call may define this memory
+                    bool strong_updt = pts.second.size() == 1 &&
+                                       !ptr.offset.isUnknown() &&
+                                       !(ptr.offset + from).isUnknown() &&
+                                       !(ptr.offset + to).isUnknown() &&
+                                       !llvm::isa<llvm::CallInst>(ptr.value);
+                    // FIXME: what about vars in recursive functions?
+                    node->addDef(target, ptr.offset + from, ptr.offset + to,
+                                 strong_updt);
+                }
+            }
 
             if (const auto *uses = model->uses(i)) {
                 std::tie(from, to) = getFromTo(CInst, uses);

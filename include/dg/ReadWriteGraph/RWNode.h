@@ -469,8 +469,9 @@ class RWNodeFork : public RWNode {
     }
 
     static const RWNodeFork *get(const RWNode *n) {
-        return n->getType() == RWNodeType::FORK ? static_cast<const RWNodeFork *>(n)
-                                                : nullptr;
+        return n->getType() == RWNodeType::FORK
+                       ? static_cast<const RWNodeFork *>(n)
+                       : nullptr;
     }
 
     RWCalledValue *getSingleForkee() {

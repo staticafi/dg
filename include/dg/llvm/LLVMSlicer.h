@@ -142,8 +142,8 @@ class LLVMSlicer : public Slicer<LLVMNode> {
             F->deleteBody();
 
             if (!F->hasAddressTaken()) {
-                // remove the function only if it does not have its address taken
-                // to maintain valid pointers to it
+                // remove the function only if it does not have its address
+                // taken to maintain valid pointers to it
                 F->replaceAllUsesWith(llvm::UndefValue::get(F->getType()));
                 F->eraseFromParent();
             }

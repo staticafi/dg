@@ -278,7 +278,6 @@ std::set<LockNode *> GraphBuilder::getLocks() const {
     return locks;
 }
 
-
 std::set<const EntryNode *> GraphBuilder::getProcedureEntries() const {
     std::set<const EntryNode *> res;
 
@@ -365,7 +364,8 @@ void GraphBuilder::printNodes(std::ostream &ostream) const {
     }
 }
 
-void GraphBuilder::printEdges(std::ostream &ostream, bool printOnlyDirect) const {
+void GraphBuilder::printEdges(std::ostream &ostream,
+                              bool printOnlyDirect) const {
     for (const auto &iterator : llvmToNodeMap_) {
         iterator.second->printOutcomingEdges(ostream, printOnlyDirect);
     }

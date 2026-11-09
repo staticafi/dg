@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         compiler: [gcc, clang]
         hashmap: [tsl-hopscotch]
 
@@ -18,18 +18,22 @@ jobs:
 
     steps:
       - name: Checkout DG
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout TSL Hopscotch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Tessil/hopscotch-map
+          # Pinned: this checkout used to float on hopscotch-map's master, so
+          # the job broke whenever that project moved. v2.4.0 and current
+          # master do not compile against DG's SparseBitvectorImpl usage.
+          ref: v2.3.1
           path: tsl-hopscotch
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install ccache cmake ninja-build clang-10 llvm-10-dev
+          sudo apt install ccache cmake ninja-build clang-14 llvm-14-dev
 
       - name: Set environment
         id: env
@@ -41,8 +45,8 @@ jobs:
           esac
 
           if [[ "${{matrix.compiler}}" = "clang" ]]; then
-            echo "CC=clang-10" >> $GITHUB_ENV
-            echo "CXX=clang++-10" >> $GITHUB_ENV
+            echo "CC=clang-14" >> $GITHUB_ENV
+            echo "CXX=clang++-14" >> $GITHUB_ENV
 
             # force coloured output
             echo "CFLAGS=$CFLAGS -fcolor-diagnostics" >> $GITHUB_ENV
@@ -66,10 +70,10 @@ jobs:
           echo "CCACHE_COMPRESSLEVEL=6" >> $GITHUB_ENV
           echo "CCACHE_MAXSIZE=400M" >> $GITHUB_ENV
 
-          echo "::set-output name=timestamp::$(date -u -Iseconds)"
+          echo "timestamp=$(date -u -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Set up ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .ccache
           key: ${{matrix.os}}-${{matrix.hashmap}}-${{matrix.compiler}}-${{steps.env.outputs.timestamp}}
@@ -81,7 +85,7 @@ jobs:
                 -B_build \
                 -GNinja \
                 -DUSE_SANITIZERS:BOOL=ON \
-                -DLLVM_DIR:PATH="$(llvm-config-10 --cmakedir)" \
+                -DLLVM_DIR:PATH="$(llvm-config-14 --cmakedir)" \
                 -D${HASHMAP}:PATH="$GITHUB_WORKSPACE/${{matrix.hashmap}}"
 
       - name: Build
