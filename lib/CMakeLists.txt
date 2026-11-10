@@ -112,7 +112,8 @@ add_library(dgllvmcda SHARED
 )
 target_link_libraries(dgllvmcda PUBLIC dgllvmpta
                                 PUBLIC dgcda
-                                PRIVATE dgllvmforkjoin)
+                                PRIVATE dgllvmforkjoin
+                                INTERFACE ${llvm_analysis}) # LoopInfo, only for static LLVM
 
 add_library(dgllvmdg SHARED
 	llvm/LLVMNode.cpp
