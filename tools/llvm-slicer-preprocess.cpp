@@ -151,23 +151,48 @@ bool cutoffDivergingBranches(Module &M, const std::string &entry,
                 irrelevant.push_back(&B);
             }
         }
+
+        // decide which blocks are replaced by exit() before we change the
+        // CFG (replacing blocks changes the predecessors of other blocks)
+        std::vector<bool> replace;
+        replace.reserve(irrelevant.size());
         for (auto *B : irrelevant) {
+            replace.push_back(hasRelevantPredecessor(B, relevant));
+        }
+
+        for (size_t i = 0; i < irrelevant.size(); ++i) {
+            auto *B = irrelevant[i];
+            // the irrelevant block will not jump to its successors anymore
+            for (auto *succ : llvm::successors(B)) {
+                if (relevant.count(succ) > 0)
+                    succ->removePredecessor(B, /* KeepOneInputPHIs = */ true);
+            }
             // if this irrelevant block has predecessors in relevant,
             // replace it with abort/exit
-            if (hasRelevantPredecessor(B, relevant)) {
+            if (replace[i]) {
                 auto *newB = BasicBlock::Create(Ctx, "diverge", &F);
                 CallInst::Create(exitF, {ConstantInt::get(argTy, 0)}, "", newB);
                 // CloneMetadata(point, new_CI);
                 new UnreachableInst(Ctx, newB);
-                // we cannot do the replacement here, we would break the
-                // iterator
                 B->replaceAllUsesWith(newB);
                 ++cutoff;
             } else {
                 // else just erase it
                 ++removed;
             }
+        }
+
+        // drop the references from all the irrelevant blocks before erasing
+        // any of them. Erasing a block that is still used (e.g., by a branch
+        // in another irrelevant block that was not erased yet) leaves dangling
+        // uses which corrupts the use lists, so some edges were missing from
+        // the predecessors of blocks and the control dependencies computed
+        // from post-dominators were wrong (the slicer removed branches that
+        // decide whether the slicing criterion is reached)
+        for (auto *B : irrelevant) {
             B->dropAllReferences();
+        }
+        for (auto *B : irrelevant) {
             B->eraseFromParent();
         }
     }
