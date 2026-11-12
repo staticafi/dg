@@ -135,6 +135,7 @@ add_test(realloc1               ${RUNNER} realloc1)
 add_test(realloc2               ${RUNNER} realloc2)
 add_test(cyclic-realloc         ${RUNNER} cyclic-realloc)
 add_test(cutoff-diverging-erase ${RUNNER} cutoff-diverging-erase)
+add_test(pta-unknown-offset-store ${RUNNER} pta-unknown-offset-store)
 add_test(switch1                ${RUNNER} switch1)
 add_test(switch2                ${RUNNER} switch2)
 # The pointer analysis does not handle va_arg, which clang emits on AArch64

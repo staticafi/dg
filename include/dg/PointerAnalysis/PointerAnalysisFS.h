@@ -72,11 +72,11 @@ class PointerAnalysisFS : public PointerAnalysis {
         // in the beforeProcessed method
         assert(mm && "Do not have memory map");
 
-        // every store that stores to a memory allocated
-        // not in a loop is a strong update
+        // a store to a single memory location (one target with a known
+        // offset) allocated not in a loop is a strong update
         // FIXME: memcpy can be strong update too
         if (n->getType() == PSNodeType::STORE) {
-            if (!pointsToAllocationInLoop(n->getOperand(1)))
+            if (isStrongUpdate(n->getOperand(1)))
                 overwritten = &n->getOperand(1)->pointsTo;
         }
 
@@ -208,6 +208,21 @@ class PointerAnalysisFS : public PointerAnalysis {
     static bool isOnLoop(const PSNode *n) {
         // if the scc's size > 1, the node is in loop
         return n->getParent() ? (n->getParent()->getLoop(n) != nullptr) : false;
+    }
+
+    // A store via the pointer `n` overwrites the old value only if it
+    // writes to a single known location. If the pointer may point to
+    // more locations (more targets or an unknown offset), the store may
+    // write to any of them, so the old values of all of them are kept
+    // (the stored value is added to them). Otherwise, e.g., storing to
+    // a[i] removed the values stored before to a[j].
+    static bool isStrongUpdate(PSNode *n) {
+        if (n->pointsTo.size() != 1)
+            return false;
+        const auto &ptr = *n->pointsTo.begin();
+        if (!ptr.isValid() || ptr.isInvalidated() || ptr.offset.isUnknown())
+            return false;
+        return !isOnLoop(ptr.target);
     }
 
     static bool pointsToAllocationInLoop(PSNode *n) {

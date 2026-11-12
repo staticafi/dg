@@ -227,4 +227,5 @@ tests = {
     'atomic3'             : Test('atomic3.c'),
     'cyclic-realloc'      : Test('cyclic-realloc.c'),
     'cutoff-diverging-erase' : Test('cutoff_diverging_erase.c'),
+    'pta-unknown-offset-store' : Test('pta_unknown_offset_store.c'),
 }
