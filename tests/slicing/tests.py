@@ -226,4 +226,5 @@ tests = {
     'atomic2'             : Test('atomic2.c'),
     'atomic3'             : Test('atomic3.c'),
     'cyclic-realloc'      : Test('cyclic-realloc.c'),
+    'cutoff-diverging-erase' : Test('cutoff_diverging_erase.c'),
 }
