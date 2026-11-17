@@ -1033,6 +1033,22 @@ void LLVMDependenceGraph::computeForkJoinDependencies(
             auto *forkNode = findInstruction(castToLLVMInstruction(fork),
                                              constructedFunctions);
             joinNode->addControlDependence(forkNode);
+
+            // pthread_join(t, &res) stores the value returned by the thread
+            // into res. The join is modeled as an unknown call, so the loads
+            // of res depend on it, but not on what the thread returns. Make
+            // the join depend on the return instructions of the spawned
+            // functions, so that the slicer keeps the returned value.
+            if (llvmutils::isConstantZero(join->getArgOperand(1)) ||
+                llvm::isa<llvm::ConstantPointerNull>(join->getArgOperand(1)))
+                continue;
+            for (auto *subg : forkNode->getSubgraphs()) {
+                for (auto &it : *subg) {
+                    LLVMNode *retNode = it.second;
+                    if (llvm::isa<llvm::ReturnInst>(retNode->getKey()))
+                        retNode->addDataDependence(joinNode);
+                }
+            }
         }
     }
 }
